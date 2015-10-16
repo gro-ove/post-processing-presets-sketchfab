@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Sketchfab Post-Process Presets
 // @namespace     https://github.com/PadreZippo/post-processing-presets-sketchfab
-// @version       0.0.4
+// @version       0.0.5
 // @updateURL     https://raw.githubusercontent.com/gro-ove/post-processing-presets-sketchfab/master/user.js
 // @downloadURL   https://raw.githubusercontent.com/gro-ove/post-processing-presets-sketchfab/master/user.js
 // @description   Stores post-processing presets
@@ -1035,19 +1035,48 @@ function onMaterialsReady() {
     $container = $('[data-panel="materials"] > .vertical-widget > .widget-wrapper > .children');
     $container.prepend([
         '<div style="padding:15px 15px 5px 15px">',
-        '<button class="button btn-small" id="exportMaterial" type="button">Export</button>&nbsp;',
-        '<button class="button btn-small" id="exportAllMaterials" type="button">Export (All)</button>&nbsp;',
-        '<button class="button btn-small" id="importMaterial" type="button">Import</button>&nbsp;',
-        '<button class="button btn-small" id="importAllMaterials" type="button">Import (All)</button>&nbsp;',
-        '<button class="button btn-small" id="downloadTextures" type="button">DL textures</button>&nbsp;',
+        '<button class="button btn-small" id="exportMaterial" type="button">Ex.</button>&nbsp;',
+        '<button class="button btn-small" id="importMaterial" type="button">Im.</button>&nbsp;',
+        '<button class="button btn-small" id="downloadTextures" type="button">DL t.</button>&nbsp;',
+        '<button class="button btn-small" id="exportAllMaterials" type="button">Ex. A</button>&nbsp;',
+        '<button class="button btn-small" id="importAllMaterials" type="button">Im. A</button>&nbsp;<br>',
+        '<select id="materialsSets" style="width:120px;"></select>',
+        '<button class="button btn-small" id="saveAllMaterials" type="button">Save A</button>&nbsp;',
+        '<button class="button btn-small" id="loadAllMaterials" type="button">Load A</button>&nbsp;',
         '</div>'
     ].join(''));
 
     $('#exportMaterial').on('click', exportMaterial);
-    $('#exportAllMaterials').on('click', exportAllMaterials);
     $('#importMaterial').on('click', importMaterial);
-    $('#importAllMaterials').on('click', importAllMaterials);
     $('#downloadTextures').on('click', downloadTextures);
+    
+    $('#exportAllMaterials').on('click', exportAllMaterials);
+    $('#importAllMaterials').on('click', importAllMaterials);
+    
+    $('#saveAllMaterials').on('click', saveAllMaterials);
+    $('#loadAllMaterials').on('click', loadAllMaterials);
+
+    updateMaterialsSetsSelect(true);
+}
+
+var MATERIALS_SET_KEY = 'materialsSet__';
+function updateMaterialsSetsSelect(first){
+    var options = '';
+    for (var n in localStorage){
+        if (n.indexOf(MATERIALS_SET_KEY) === 0){
+            options += '<option value="' + n + '">' + n.slice(MATERIALS_SET_KEY.length) + '</option>';
+        }
+    }
+
+    $('#materialsSets').html(options);
+    $('#materialsSets, #loadAllMaterials').attr('disabled', options.length === 0 || null);
+
+    if (first === true){
+        var cur = MATERIALS_SET_KEY + $('.model-name').text();
+        if (localStorage[cur]){
+            $('#materialsSets').val(cur);
+        }
+    }
 }
 
 /**
@@ -1100,7 +1129,7 @@ function collectWidgetValues($el) {
     }
 }
 
-function exportAllMaterials() {
+function getAllMaterialsAsJson() {
     var result = {};
 
     $('#MaterialSelect .options li').each(function (){
@@ -1108,14 +1137,26 @@ function exportAllMaterials() {
         result[this.textContent] = exportMaterial(true);
     });
 
-    var win = window.open('', 'material-export');
-    win.document.body.innerHTML = '<pre>' + JSON.stringify(result) + '</pre>';
+    return JSON.stringify(result);
 }
 
-function importAllMaterials() {
+function exportAllMaterials() {
+    win.document.body.innerHTML = '<pre>' + getAllMaterialsAsJson() + '</pre>';
+}
+
+function saveAllMaterials(){
+    var newPresetName = prompt('Enter name of new materials set:', $('.model-name').text());
+    if (!newPresetName) return;
+    localStorage[MATERIALS_SET_KEY + newPresetName] = getAllMaterialsAsJson();
+    updateMaterialsSetsSelect();
+}
+
+function importAllMaterialsFromJson(json) {
+    if (!json) return;
+
     var materials;
     try {
-        materials = JSON.parse(window.prompt());
+        materials = JSON.parse(json);
     } catch (e) {
         alert('Material is not valid');
         return;
@@ -1133,6 +1174,15 @@ function importAllMaterials() {
             importMaterialFromObject(materials[n]);
         }
     });
+}
+
+function importAllMaterials() {
+    importAllMaterialsFromJson(window.prompt());
+}
+
+function loadAllMaterials(){
+    var key = $('#materialsSets').val();
+    importAllMaterialsFromJson(localStorage[key]);
 }
 
 function exportMaterial(returnObj) {
@@ -1288,7 +1338,7 @@ function exportMaterial(returnObj) {
         return material;
     } else {
         var win = window.open('', 'material-export');
-        win.document.write('<pre>' + JSON.stringify(material, null, 4) + '</pre>');
+        win.document.body.innerHTML = '<pre>' + JSON.stringify(material, null, 4) + '</pre>';
     }
 }
 
