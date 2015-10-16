@@ -2,8 +2,8 @@
 // @name          Sketchfab Post-Process Presets
 // @namespace     https://github.com/PadreZippo/post-processing-presets-sketchfab
 // @version       0.0.4
-// @updateURL     https://raw.githubusercontent.com/PadreZippo/post-processing-presets-sketchfab/master/user.js
-// @downloadURL   https://raw.githubusercontent.com/PadreZippo/post-processing-presets-sketchfab/master/user.js
+// @updateURL     https://raw.githubusercontent.com/gro-ove/post-processing-presets-sketchfab/master/user.js
+// @downloadURL   https://raw.githubusercontent.com/gro-ove/post-processing-presets-sketchfab/master/user.js
 // @description   Stores post-processing presets
 // @include       https://sketchfab.com/models/*/edit
 // @include       https://beta.sketchfab.com/models/*/edit
